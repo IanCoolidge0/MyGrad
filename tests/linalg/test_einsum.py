@@ -352,3 +352,5 @@ def test_einsum_bkwd6(shape, optimize):
 
     assert_allclose(x.grad, dx, atol=1e-6)
     assert_allclose(y.grad, dy, atol=1e-6)
+
+
