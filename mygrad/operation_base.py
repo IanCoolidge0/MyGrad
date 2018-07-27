@@ -95,7 +95,7 @@ class Operation:
                 can utilize broadcasting."""
         for index, var in enumerate(self.variables):
             if not var.constant:
-                self.backward_var(grad, index, **kwargs)
+                self.backward_var(grad, index, _force=False, **kwargs)
 
     def null_gradients(self):
         """ Back-propagates `None` to the gradients of the operation's input tensors,

@@ -208,7 +208,7 @@ class Tensor:
 
         return cls(op_out, constant=is_const, _creator=f, _scalar_only=scalar_only)
 
-    def backward(self, grad=None, *, _broadcastable=False):
+    def backward(self, grad=None, *, _broadcastable=False, _force=True):
         """ Compute set or accumulate `self.grad` with `grad`, and pass `self.creator.backward(grad)`.
             In effect, calling `self.backward()` will trigger a "back-propagation" from `self` through
             the preceding nodes in the computational graph. Thus a node, `a`, will have the attribute
@@ -245,14 +245,17 @@ class Tensor:
         assert grad.shape == self.shape, "A tensor and its associated gradient must possess the same shape"
         self.grad = np.asarray(grad if self.grad is None else self.grad + grad)
 
-        if self._creator is not None:
-            self._creator.backward(grad, _broadcastable=isinstance(self._creator, BroadcastableOp))
+        if not _force:
+            self._ops.pop()
+
+        if self._creator is not None and (not self._ops or _force):
+            self._creator.backward(self.grad, _broadcastable=isinstance(self._creator, BroadcastableOp))
 
     def null_gradients(self):
+        if self._creator is not None and self.grad is not None:
+            self._creator.null_gradients()
         self.grad = None
         self._ops = []
-        if self._creator is not None:
-            self._creator.null_gradients()
 
     @property
     def scalar_only(self):
